@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{TITLE}}</title>
+<base href="{{PROJECT_URI}}/">
+<link href="{{FONTS}}" rel="stylesheet">
+<link rel="stylesheet" href="{{KATEX_CSS}}">
+<script src="{{KATEX_JS}}"></script>
+<script src="{{QRCODE_JS}}"></script>
+<link rel="stylesheet" href="{{RUNTIME_URI}}/theme.css">
+<script>
+window.TL = {{TIMELINE}};
+window.CONFIG = {{CONFIG}};
+window.FORMAT = {{FORMAT}};
+window.PREVIEW_AUDIO = '{{AUDIO}}';
+</script>
+</head>
+<body>
+<div id="stage">
+  <div id="world" class="layer"></div>
+  <div id="hud"></div>
+  <div id="subs"></div>
+  <div id="fade"></div>
+</div>
+<script src="{{RUNTIME_URI}}/engine.js"></script>
+<script src="{{RUNTIME_URI}}/components.js"></script>
+<script src="{{SCENES_URI}}"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+# Narration, one cue per line:  [id +pause] text      (pause = seconds of silence before the cue, default 0.35)
+# {Shown|spoken} shows "Shown" in subtitles and speaks "spoken" (numbers, years, acronyms).  " / " = subtitle break.
+# PLACEHOLDER CONTENT: replace every line with your paper's story and real numbers.
+
+[hook] Every paper starts with a question / worth a two-minute answer.
+[q +0.4] What if your results / could explain themselves?
+[res1 +3.6] Our method improves accuracy / from {61%|sixty-one percent} to {78%.|seventy-eight percent.}
+[res2 +0.5] And the gain keeps growing / as models get larger.
+[tab +0.5] It wins on every benchmark we tested.
+[end +0.8] Code and data are open. / Thanks for watching.

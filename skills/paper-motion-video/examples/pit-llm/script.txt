@@ -1,0 +1,38 @@
+# PIT-LLM narration (Kelly, Malamud, Schwab, Xu; NeurIPS 2026). One cue per line: [id +pause] text
+# {Shown|spoken}: subtitle text | pronunciation.   " / " = subtitle break.
+
+# hook
+[h1] Language models are now a standard tool / in finance and economics.
+[h2 +0.35] But a model trained on today's internet / has already read the future.
+
+# problem (the title card plays in the 3.8 s pause)
+[p1 +3.8] Backtest a strategy on {2015,|twenty-fifteen,} / and the model already knows how {2016|twenty-sixteen} turned out.
+[p2 +0.3] That's lookahead bias, / and it invalidates the backtest.
+[p3 +0.45] The usual fix, testing after the training cutoff, / leaves only a year or two of data.
+
+# idea
+[c1 +0.7] Point-in-time models fix this by construction: / each reads only text published before its cutoff.
+[c2 +0.35] But until now, / they lagged far behind standard models.
+[c3 +0.55] So how much performance / do you really have to give up?
+
+# method
+[m1 +0.9] We stream one trillion tokens of {FineWeb,|Fine Web,} in strict chronological order, / through a single {4-billion-parameter|four-billion-parameter} model.
+[m2 +0.35] Every year-end snapshot becomes its own model: / twelve vintages, from {2013|twenty-thirteen} to {2024.|twenty-twenty-four.}
+[m3 +0.45] Instruction-tuning data is filtered too, / dropping anything time-sensitive.
+
+# language results
+[r1 +0.8] It turns out the gap is mostly a gap in scale.
+[r2 +0.3] On {HellaSwag,|Hella Swag,} our {4B|four-billion} model reaches {72%,|seventy-two percent,} / up from {44|forty-four} for {ChronoGPT,|Chrono G P T,} / and close to {LLaMA|Llama} and Gemma, which have no cutoff.
+[r3 +0.4] A gap remains on knowledge-heavy tasks, / but it narrows with scale.
+
+# economic evaluation
+[e1 +0.9] The real test, though, is economic.
+[e2 +0.3] Each year of Dow Jones news is embedded / by the previous year's model, so nothing leaks.
+[e3 +0.35] The embeddings become stock portfolios, / combined for maximum Sharpe ratio, / and tested strictly out of sample.
+[s1 +0.6] The result: Sharpe ratios of {1.0 to 1.5,|one to one-point-five,} / more than double the stock market, / and far above earlier point-in-time models.
+[s2 +0.35] They even beat full-sample versions / that have seen the future.
+
+# close
+[o1 +0.9] Temporal validity / no longer has to cost performance.
+[o2 +0.35] The pipeline, the code, / and all {36|thirty-six} checkpoints are open.
+[o3 +0.45] Point-in-time language models, / for research that respects time.

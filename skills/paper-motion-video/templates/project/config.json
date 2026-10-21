@@ -1,0 +1,56 @@
+{
+  "_help": "Fields starting with _ are ignored. titleHtml: <em>..</em> = accent italic, <br> = line break. shortTitle: acronym shown bold in the running head; hudTitle: short title after it (landscape only). theme: accent = your method, contrast = the problem / unconstrained baseline, neutral = prior work. video.formats: landscape (16:9, scenes.js) and/or portrait (4:5, scenes.portrait.js), vertical (9:16), square (1:1).",
+  "title": "Your Paper Title",
+  "titleHtml": "Your <em>Paper</em><br>Title",
+  "subtitle": "A one-line subtitle",
+  "shortTitle": "ACRONYM",
+  "hudTitle": "Your paper title",
+  "venue": "Conference 2026&nbsp;&nbsp;·&nbsp;&nbsp;Track",
+  "venueShort": "Conference 2026",
+  "authors": [
+    "Author One",
+    "Author Two"
+  ],
+  "affiliations": [
+    "University A",
+    "Institute B"
+  ],
+  "links": [
+    {
+      "label": "Code · GitHub",
+      "url": "https://github.com/your-org/your-repo"
+    },
+    {
+      "label": "Paper · arXiv",
+      "url": "https://arxiv.org/abs/0000.00000"
+    }
+  ],
+  "theme": {
+    "accent": "#2f5da8",
+    "contrast": "#b8572a",
+    "neutral": "#8e949d"
+  },
+  "voice": {
+    "name": "af_heart",
+    "speed": 1.1,
+    "leadIn": 1.0,
+    "tail": 5.0
+  },
+  "video": {
+    "fps": 60,
+    "targetSeconds": 120,
+    "formats": [
+      "landscape",
+      "portrait"
+    ]
+  },
+  "music": {
+    "enabled": true,
+    "preset": "hopeful",
+    "key": "D",
+    "bpm": 96,
+    "bedLufs": -30,
+    "sfx": true
+  },
+  "output": "paper_video"
+}

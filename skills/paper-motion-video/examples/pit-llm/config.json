@@ -1,0 +1,20 @@
+{
+  "title": "Scaling Point-in-Time Language Models",
+  "titleHtml": "Scaling <em>Point-in-Time</em><br>Language Models",
+  "subtitle": "Enabling Economic Evaluation of Embeddings",
+  "shortTitle": "PIT·LLM",
+  "hudTitle": "Scaling point-in-time language models",
+  "venue": "NeurIPS 2026&nbsp;&nbsp;·&nbsp;&nbsp;Evaluations &amp; Datasets Track",
+  "venueShort": "NeurIPS 2026",
+  "authors": ["Bryan Kelly", "Semyon Malamud", "Johannes Schwab", "Teng Andrea Xu"],
+  "affiliations": ["Yale", "Swiss Finance Institute / EPFL", "AQR Capital Management"],
+  "links": [
+    {"label": "Code · GitHub", "url": "https://github.com/DjoFE2021/Point-In-Time-LLM"},
+    {"label": "Models · Hugging Face", "url": "https://huggingface.co/Diamegs"}
+  ],
+  "theme": {"accent": "#2f5da8", "contrast": "#b8572a", "neutral": "#8e949d"},
+  "voice": {"name": "af_heart", "speed": 1.1, "leadIn": 1.0, "tail": 5.2},
+  "video": {"fps": 60, "targetSeconds": 120, "formats": ["landscape", "portrait"]},
+  "music": {"preset": "hopeful", "key": "D", "bpm": 96, "bedLufs": -30},
+  "output": "PIT-LLM_NeurIPS2026_video"
+}

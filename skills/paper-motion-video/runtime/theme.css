@@ -1,0 +1,60 @@
+/* paper-motion-video theme: an editorial, print-like look (light by default).
+   Colors are CSS variables; engine.js derives the -text / -mid / -soft variants from config.json "theme". */
+:root{
+  --chip:22px;
+  --bg:#faf9f6; --paper:#ffffff; --ink:#16181d; --dim:#5d636d; --faint:#9ca1a9; --rule:#d9d5cc; --grid:#ebe8e1;
+  --shadow:0 1px 2px rgba(20,22,29,.04), 0 6px 22px rgba(20,22,29,.05);
+  --accent:#2f5da8;   --accent-text:#24508f;   --accent-mid:#93acd6;   --accent-soft:#e3eaf5;
+  --contrast:#b8572a; --contrast-text:#9c4520; --contrast-mid:#dba486; --contrast-soft:#f5e6dc;
+  --neutral:#8e949d;  --neutral-text:#5d636d;  --neutral-mid:#bfc3c9;  --neutral-soft:#e8e9eb;
+  --good:#2f7d52; --good-soft:#e1efe6; --bad:#b03a3a; --bad-soft:#f5e1e1;
+  --accent-rgb:47,93,168; --contrast-rgb:184,87,42; --neutral-rgb:142,148,157;
+  --serif:'Source Serif 4', 'Source Serif Pro', Georgia, serif; --sans:'Inter', system-ui, sans-serif; --mono:'IBM Plex Mono', ui-monospace, monospace;
+}
+:root[data-format="portrait"],:root[data-format="vertical"],:root[data-format="square"]{--chip:28px}
+:root[data-format="portrait"] .hudtxt,:root[data-format="vertical"] .hudtxt,:root[data-format="square"] .hudtxt{font-size:22px}
+:root[data-mode="dark"]{
+  --bg:#101318; --paper:#161a21; --ink:#e9ebee; --dim:#a0a6af; --faint:#646b76; --rule:#2c313a; --grid:#1d2128; --shadow:none;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:var(--W,1920px);height:var(--H,1080px);overflow:hidden;background:var(--bg)}
+body{color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;font-feature-settings:"kern","liga"}
+#stage{position:absolute;left:0;top:0;width:var(--W,1920px);height:var(--H,1080px);overflow:hidden;background:var(--bg);transform-origin:0 0}
+.abs{position:absolute}
+.layer{position:absolute;left:0;top:0;width:var(--W,1920px);height:var(--H,1080px);transform-origin:50% 50%}
+.serif{font-family:var(--serif);font-weight:400;letter-spacing:-.012em;font-optical-sizing:auto}
+.sans{font-family:var(--sans)}
+.mono{font-family:var(--mono)}
+.it{font-style:italic}
+.tab{font-variant-numeric:tabular-nums lining-nums}
+.nowrap{white-space:nowrap}
+/* small section label, e.g. "RESULTS · TABLE 2" */
+.kicker{font-family:var(--sans);font-size:var(--kicker,20px);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);white-space:nowrap}
+.kicker b{color:var(--accent-text);font-weight:600}
+.label{font-family:var(--sans);font-size:22px;color:var(--dim)}
+.accent{color:var(--accent-text)} .contrast{color:var(--contrast-text)} .neutral{color:var(--neutral-text)}
+.good{color:var(--good)} .bad{color:var(--bad)} .dim{color:var(--dim)} .faint{color:var(--faint)} .ink{color:var(--ink)}
+.em{font-style:italic;color:var(--accent-text)}
+.emC{font-style:italic;color:var(--contrast-text)}
+.card{background:var(--paper);border:1px solid var(--rule);border-radius:10px;box-shadow:var(--shadow)}
+.chip{display:inline-flex;align-items:center;gap:10px;padding:9px 18px;border:1px solid var(--rule);border-radius:999px;background:var(--paper);
+  font-family:var(--sans);font-size:var(--chip,22px);font-weight:500;color:var(--ink);white-space:nowrap}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.w{display:inline-block;white-space:pre}
+svg{overflow:visible}
+.katex{font-size:1.0em;color:var(--ink)}
+#fade{position:absolute;inset:0;background:var(--bg);opacity:0}
+/* running head + progress line */
+#hud{position:absolute;inset:0;pointer-events:none}
+.hudtxt{position:absolute;font-family:var(--sans);font-size:17px;font-weight:500;letter-spacing:.02em;color:var(--faint);white-space:nowrap}
+.hudtxt b{color:var(--dim);font-weight:600}
+#progress{position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--accent);opacity:.55}
+/* subtitles: bottom-anchored band, sized per format (LAY.subTop in engine.js); keep content above LAY.bottom */
+#subs{position:absolute;left:0;right:0;bottom:var(--sub-bottom,72px);height:0}
+.sub{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:max-content;max-width:var(--sub-max,1600px);text-align:center;
+  font-family:var(--sans);font-weight:500;font-size:var(--sub-size,40px);line-height:1.3;letter-spacing:-.003em;color:var(--ink)}
+.sub.boxed{padding:7px 20px 9px;border-radius:10px;background:rgba(16,19,24,.78);color:#f4f5f7}
+/* interactive preview (only when build/index.html is opened in a normal browser) */
+#dev{position:fixed;left:0;right:0;bottom:0;height:54px;background:#111;display:flex;align-items:center;gap:14px;padding:0 18px;font:13px var(--mono);color:#ddd;z-index:9}
+#dev input[type=range]{flex:1}
+#dev button{background:#222;color:#eee;border:1px solid #444;border-radius:6px;padding:6px 12px;font:13px var(--mono);cursor:pointer}

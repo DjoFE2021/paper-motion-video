@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# paper-motion-video command line. Usage: tools/pmv <command> [args]   (tools/pmv help)
+# The first call runs setup.sh automatically.
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export PMV_HOME="${PMV_HOME:-$HOME/.cache/paper-motion-video}"
+if [ "${1:-}" = "setup" ]; then rm -f "$PMV_HOME/.ready"; exec bash "$HERE/setup.sh"; fi
+if [ ! -f "$PMV_HOME/.ready" ]; then bash "$HERE/setup.sh" || exit 1; fi
+export HF_HOME="$PMV_HOME/hf"
+export PYTHONNOUSERSITE=1
+export PYTHONWARNINGS=ignore
+exec "$PMV_HOME/venv/bin/python" "$HERE/pmv.py" "$@"
