@@ -3,13 +3,13 @@ import re
 import shutil
 import subprocess
 
-from common import Project, die, ffmpeg
+from common import RUN, Project, die, ffmpeg
 
 BT709 = "h264_metadata=colour_primaries=1:transfer_characteristics=1:matrix_coefficients=1"
 
 
 def probe(path):
-    r = subprocess.run([ffmpeg(), "-hide_banner", "-i", str(path)], capture_output=True, text=True)
+    r = subprocess.run([ffmpeg(), "-hide_banner", "-i", str(path)], capture_output=True, encoding="utf-8", errors="replace")
     dur = re.search(r"Duration: (\d+):(\d+):([\d.]+)", r.stderr)
     vid = re.search(r"Video: .*?, (\d+)x(\d+).*?, ([\d.]+) fps", r.stderr)
     return {"duration": int(dur[1]) * 3600 + int(dur[2]) * 60 + float(dur[3]) if dur else None,
@@ -17,13 +17,14 @@ def probe(path):
 
 
 def loudness(path):
-    r = subprocess.run([ffmpeg(), "-hide_banner", "-i", str(path), "-af", "ebur128=peak=true", "-f", "null", "-"], capture_output=True, text=True)
+    r = subprocess.run([ffmpeg(), "-hide_banner", "-i", str(path), "-af", "ebur128=peak=true", "-f", "null", "-"], capture_output=True, encoding="utf-8", errors="replace")
     i = re.findall(r"I:\s+(-?[\d.]+) LUFS", r.stderr)
     pk = re.findall(r"Peak:\s+(-?[\d.]+) dBFS", r.stderr)
     return (float(i[-1]) if i else None), (float(pk[-1]) if pk else None)
 
 
 def run(project: Project, preview=False, share=True, fmt="landscape"):
+    RUN.step("package", fmt, preview=preview)
     b = project.fbuild(fmt)
     src = b / ("preview.mp4" if preview else "video.mp4")
     if not src.exists():

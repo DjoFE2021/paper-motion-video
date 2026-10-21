@@ -1,4 +1,4 @@
-# Storytelling for a two-minute paper video
+# Storytelling for a short paper video
 
 ## Contents
 1. The arc
@@ -11,7 +11,7 @@
 8. Voices
 9. Worked example
 
-The video has one job: get the paper's message into a smart non-specialist's head in two minutes. Every sentence must earn its place by moving that message forward, and it must come with something to show.
+The video has one job: get the paper's message into a smart non-specialist's head in the time it has (`video.targetSeconds`, two minutes unless the user asked for another length). Every sentence must earn its place by moving that message forward, and it must come with something to show.
 
 ## 1. The arc
 
@@ -32,9 +32,16 @@ Most papers fit this shape. Merge or drop beats rather than squeezing in more.
 
 Open on the problem, not on "In this paper we…". The title card comes *after* the hook, in a 3–4 s pause.
 
+**Other lengths.** The table is for 2:00. For other lengths, cut or add whole beats rather than speeding everything up:
+- **0:45–1:15 (Reels, Shorts, a feed teaser).** Hook, title, the problem and the idea as one beat, one result, close: 4–6 scenes. Drop the question beat, the second result and the method's detail. Keep the limitation as half a sentence.
+- **1:30.** The 2:00 arc without the second result, or with the problem and the idea merged.
+- **2:30–3:00 (a talk, a lab page).** Give the method a second beat, or add the downstream-impact result. Still show two or three results, never a fourth chart.
+
+The title card and the end card keep their time at every length, so a shorter video loses words from the middle.
+
 ## 2. Word budget and pacing
 
-- **Word count.** Kokoro at `speed` 1.1 speaks ~2.7 words/s; with pauses, the title card and the end-card hold that is ~2.2 words/s overall. **2:00 ≈ 235–250 words**, 18–22 sentences (measured: 268 words gave 2:06, 273 gave 2:10, and 246 words of theory-paper vocabulary gave 2:03). Technical terms are spoken more slowly, so aim for ~230 words for a jargon-heavy paper. `pmv narrate` prints the real duration and how many words to add or cut. If you are a few seconds over, cut a sentence rather than speeding up the voice.
+- **Word count.** Kokoro at `speed` 1.1 speaks ~2.7 words/s; with pauses, the title card and the end-card hold that is ~2.2 words/s overall. **2:00 ≈ 235–250 words**, 18–22 sentences (measured: 268 words gave 2:06, 273 gave 2:10, and 246 words of theory-paper vocabulary gave 2:03). For another length, allow 2.05–2.2 words per second of everything but the first 6 s: 1:00 ≈ 110–120 words, 1:30 ≈ 170–185, 3:00 ≈ 355–385. `pmv new` prints this budget for the project's length. Technical terms are spoken more slowly, so aim for ~230 words for a jargon-heavy paper. `pmv narrate` prints the real duration and how many words to add or cut. If you are a few seconds over, cut a sentence rather than speeding up the voice.
 - **Sentence length.** Aim for 8–20 words, with one idea per sentence. Break each sentence into subtitle cards of ≤ 45 characters with ` / `, at natural phrase boundaries.
 - **Pauses** (`[id +pause]`):
 
@@ -102,7 +109,7 @@ The end card's tagline is read on its own, often as the thumbnail. It must stand
 
 ## 8. Voices
 
-Kokoro-82M ships several English voices; set `voice.name` in `config.json`.
+Kokoro-82M ships several English voices; set `voice.name` in `config.json`, or pass `--voice` to `pmv new` (and to `pmv defaults` to keep it for every project).
 
 | Accent | Female | Male |
 |---|---|---|

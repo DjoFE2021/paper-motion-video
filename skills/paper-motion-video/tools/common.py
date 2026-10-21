@@ -1,7 +1,9 @@
-"""Shared helpers: project layout, config, page generation, ffmpeg."""
+"""Shared helpers: project layout, config, setup options, progress records, page generation, ffmpeg."""
 import json
 import os
+import re
 import sys
+import time
 from pathlib import Path
 
 TOOLS = Path(__file__).resolve().parent
@@ -24,7 +26,156 @@ DEFAULTS = {
 
 def die(msg):
     print(f"pmv: {msg}", file=sys.stderr)
+    RUN.end(error=msg)
     sys.exit(1)
+
+
+# ---- setup options: `pmv new <dir> --length 90 ...` writes them into the project's config.json, and `pmv defaults ...`
+# saves them for every new project in DEFAULTS_FILE (a fragment of config.json; any of its fields may go there)
+DEFAULTS_FILE = Path(os.environ.get("PMV_DEFAULTS", Path.home() / ".config" / "paper-motion-video" / "defaults.json"))
+MUSIC = ("hopeful", "reflective", "driving")
+
+
+def parse_length(text):
+    """'90', '90s', '2m', '1.5min' or '1:30' -> seconds"""
+    s = text.strip().lower()
+    m = re.fullmatch(r"(\d+):([0-5]\d)", s) or re.fullmatch(r"(\d+(?:\.\d+)?)\s*(s|sec|m|min)?", s)
+    if not m:
+        die(f"length {text!r}: give seconds (90), minutes (2m) or m:ss (1:30)")
+    sec = int(m[1]) * 60 + int(m[2]) if ":" in s else float(m[1]) * (60 if m[2] in ("m", "min") else 1)
+    if not 20 <= sec <= 900:
+        die(f"length {text!r}: choose between 20 seconds and 15 minutes")
+    return round(sec)
+
+
+def setup_options(a):
+    """the config.json fields the --length, --formats, --voice and --music flags ask for"""
+    cfg = {}
+    if a.length:
+        cfg.setdefault("video", {})["targetSeconds"] = parse_length(a.length)
+    if a.formats:
+        fs = [f.strip() for f in a.formats.split(",") if f.strip()]
+        if not fs or any(f not in FORMATS for f in fs):
+            die(f"formats {a.formats!r}: choose from {', '.join(FORMATS)}, or a comma list")
+        cfg.setdefault("video", {})["formats"] = fs
+    if a.voice:
+        if not re.fullmatch(r"[a-z]{2}_[a-z]+", a.voice):
+            die(f"voice {a.voice!r}: a Kokoro voice such as af_heart or bm_george (references/storytelling.md lists them)")
+        cfg["voice"] = {"name": a.voice}
+    if a.music:
+        if a.music != "off" and a.music not in MUSIC:
+            die(f"music {a.music!r}: choose from {', '.join(MUSIC)} or off")
+        cfg["music"] = {"enabled": False} if a.music == "off" else {"enabled": True, "preset": a.music}
+    return cfg
+
+
+def merge(base, extra):
+    """`extra` over `base`, nested objects merged"""
+    out = dict(base)
+    for k, v in extra.items():
+        out[k] = merge(out[k], v) if isinstance(v, dict) and isinstance(out.get(k), dict) else v
+    return out
+
+
+def user_defaults():
+    try:
+        return json.loads(DEFAULTS_FILE.read_text(encoding="utf-8")) if DEFAULTS_FILE.exists() else {}
+    except json.JSONDecodeError as e:
+        die(f"{DEFAULTS_FILE} is not valid JSON: {e}")
+
+
+def clock(seconds):
+    s = round(seconds)
+    return f"{s // 60}:{s % 60:02d}"
+
+
+def budget(seconds):
+    """what fits a target length: (words low, words high, scenes low, scenes high)"""
+    talk = max(seconds - 6, 10)   # the lead-in and the end card's hold carry no words
+    scenes = round(seconds / 13)
+    return 5 * round(2.05 * talk / 5), 5 * round(2.2 * talk / 5), max(3, scenes - 1), max(3, scenes + 1)
+
+
+def describe_setup(cfg):
+    """one line: the length and what fits it, formats, voice, music"""
+    v, music = cfg.get("video", {}), cfg.get("music", {})
+    t = v.get("targetSeconds", 120)
+    lo, hi, slo, shi = budget(t)
+    return (f"length {clock(t)} (a script of about {lo}–{hi} words, {slo}–{shi} scenes), formats "
+            f"{', '.join(v.get('formats', ['landscape']))}, voice {cfg.get('voice', {}).get('name', 'af_heart')}, "
+            f"music {music.get('preset', 'hopeful') if music.get('enabled', True) else 'off'}")
+
+
+# ---- progress: one JSON file per run in PMV_PROGRESS_DIR, which the Claude Code progress pane (hooks/register.tsx at
+# the repository's root) sets for its session. Without the variable nothing is written, and a failed write never stops pmv.
+class Run:
+    KEEP = 100   # runs kept in the folder
+
+    def __init__(self):
+        d = os.environ.get("PMV_PROGRESS_DIR")
+        self.dir = Path(d) if d else None
+        self.rec, self.written = None, 0.0
+
+    def start(self, command, args):
+        if self.dir is not None:
+            t = now_ms()
+            self.path = self.dir / f"{t}-{os.getpid()}.json"
+            self.rec = {"command": command, "args": args, "project": None, "state": "running", "startedAt": t,
+                        "step": None, "steps": []}
+            self._write(prune=True)
+
+    def update(self, **fields):
+        if self.rec is not None:
+            self.rec.update(fields)
+            self._write()
+
+    def step(self, name, fmt=None, total=None, unit=None, preview=False):
+        """a new step of this run: narrate, review, stills, music, render, package, check or preview"""
+        if self.rec is not None:
+            self._close(ok=True)
+            self.rec["step"] = {"name": name, "format": fmt, "preview": preview, "done": 0, "total": total,
+                                "unit": unit, "startedAt": now_ms()}
+            self._write()
+
+    def advance(self, done):
+        """`done` of the step's total, written at most twice a second"""
+        step = self.rec and self.rec["step"]
+        if step:
+            step["done"] = done
+            if done == step["total"] or time.time() - self.written > .5:
+                self._write()
+
+    def end(self, error=None):
+        if self.rec is not None and self.rec["state"] == "running":
+            self._close(ok=error is None)
+            self.rec.update(state="failed" if error else "done", error=error, endedAt=now_ms())
+            self._write()
+
+    def _close(self, ok):
+        if self.rec["step"]:
+            self.rec["steps"].append({**self.rec["step"], "ok": ok, "endedAt": now_ms()})
+            self.rec["step"] = None
+
+    def _write(self, prune=False):
+        self.rec["updatedAt"] = now_ms()
+        try:
+            self.dir.mkdir(parents=True, exist_ok=True)
+            if prune:
+                for old in sorted(self.dir.glob("*.json"))[:-self.KEEP]:
+                    old.unlink()
+            tmp = self.path.with_suffix(".tmp")
+            tmp.write_text(json.dumps(self.rec), encoding="utf-8")
+            os.replace(tmp, self.path)
+            self.written = time.time()
+        except OSError:
+            pass
+
+
+def now_ms():
+    return round(time.time() * 1000)
+
+
+RUN = Run()
 
 
 class Project:
@@ -34,9 +185,10 @@ class Project:
         if not cfg.exists():
             die(f"{self.dir} is not a project (no config.json). Create one with: pmv new <dir>")
         try:
-            self.config = json.loads(cfg.read_text())
+            self.config = json.loads(cfg.read_text(encoding="utf-8"))
         except json.JSONDecodeError as e:
             die(f"config.json is not valid JSON: {e}")
+        RUN.update(project=str(self.dir))
         for k, v in DEFAULTS.items():
             self.config[k] = {**v, **self.config.get(k, {})}
         self.build = self.dir / "build"
@@ -51,7 +203,7 @@ class Project:
         p = self.build / "timeline.json"
         if not p.exists():
             die("no build/timeline.json yet. Run: pmv narrate <project>")
-        return json.loads(p.read_text())
+        return json.loads(p.read_text(encoding="utf-8"))
 
     # ---- formats
     def formats(self, arg=None):
@@ -86,7 +238,7 @@ class Project:
 
     def events(self, fmt="landscape"):
         p = self.fbuild(fmt) / "events.json"
-        return json.loads(p.read_text()) if p.exists() else None
+        return json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
 
 
 CDN = {
@@ -126,7 +278,7 @@ def local_assets():
             if not f.exists():
                 f.write_bytes(_get(u))
             css = css.replace(u, f.as_uri())
-        paths["fonts"].write_text(css)
+        paths["fonts"].write_text(css, encoding="utf-8")
         kcss = _get(CDN["katex_css"]).decode()
         base = CDN["katex_css"].rsplit("/", 1)[0]
         for rel in sorted(set(re.findall(r"url\((fonts/[^)]+\.woff2)\)", kcss))):
@@ -134,7 +286,7 @@ def local_assets():
             if not f.exists():
                 f.write_bytes(_get(f"{base}/{rel}"))
         kcss = re.sub(r",\s*url\(fonts/[^)]+\.(woff|ttf)\) format\(\"(woff|truetype)\"\)", "", kcss)
-        paths["katex_css"].write_text(kcss)
+        paths["katex_css"].write_text(kcss, encoding="utf-8")
         paths["katex_js"].write_bytes(_get(CDN["katex_js"]))
         paths["qrcode_js"].write_bytes(_get(CDN["qrcode_js"]))
         marker.touch()
@@ -149,10 +301,10 @@ def write_index(project: Project, local=True, fmt="landscape") -> Path:
     local=True  -> <build>/render.html, assets from the local cache (headless renders, needs --allow-file-access-from-files)
     local=False -> <build>/index.html, assets from the CDN (interactive preview in any browser)"""
     tl = project.timeline()
-    html = (RUNTIME / "index.html").read_text()
+    html = (RUNTIME / "index.html").read_text(encoding="utf-8")
     fb = project.fbuild(fmt)
     audio = (fb / "mix.wav") if (fb / "mix.wav").exists() else (project.build / "voice.wav")
-    audio = str(audio.relative_to(project.dir))
+    audio = audio.relative_to(project.dir).as_posix()   # used as a URL: forward slashes on Windows too
     w, h = FORMATS[fmt]
     cfg = {k: v for k, v in project.config.items() if not k.startswith("_")}
     rep = {
@@ -170,7 +322,7 @@ def write_index(project: Project, local=True, fmt="landscape") -> Path:
     for a, b in rep.items():
         html = html.replace(a, b)
     out = fb / ("render.html" if local else "index.html")
-    out.write_text(html)
+    out.write_text(html, encoding="utf-8")
     return out
 
 

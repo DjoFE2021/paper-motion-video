@@ -1,0 +1,8 @@
+{
+  "name": "paper-motion-video",
+  "version": "1.2.0",
+  "description": "Turn a research paper into a narrated explainer video, with a pane that follows the agent through the pipeline",
+  "author": { "name": "Johannes Schwab" },
+  "license": "MIT",
+  "types": "./types/index.d.ts"
+}

@@ -1,0 +1,4 @@
+# LF everywhere, also in Windows checkouts (the bash launcher tools/pmv fails with CRLF),
+# except Windows batch files, which cmd.exe needs with CRLF
+* text=auto eol=lf
+*.cmd text eol=crlf

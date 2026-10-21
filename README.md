@@ -32,24 +32,30 @@ On an 8-core laptop, a 2-minute video narrates in about a minute and renders in 
 **Claude Code (plugin).** Run these inside Claude Code:
 
 ```
-/plugin marketplace add OWNER/paper-motion-video
+/plugin marketplace add DjoFE2021/paper-motion-video
 /plugin install paper-motion-video@paper-motion-video
 ```
 
-**Claude Code (manual).** Copy the skill folder:
+From a shell, the same is `claude plugin marketplace add DjoFE2021/paper-motion-video`, then `claude plugin install paper-motion-video@paper-motion-video`. In the Claude desktop app, where `/plugin` does not run, click **+** next to the prompt box, then **Plugins**, **Add marketplace** with `DjoFE2021/paper-motion-video`, then **Add plugin**.
+
+The plugin also brings a **Video progress** pane. While the agent works, it shows a checklist beside the chat (fact sheet, narration, scenes, review, render, package and final check, per cut), a progress bar with the time left while something renders, and a one-line status under the prompt. It opens by itself on a wide terminal; `/video-progress` opens it anytime.
+
+**Claude Code (manual).** Copy the skill folder (this gets the skill alone, without the progress pane):
 
 ```bash
-git clone https://github.com/OWNER/paper-motion-video
+git clone https://github.com/DjoFE2021/paper-motion-video
 cp -r paper-motion-video/skills/paper-motion-video ~/.claude/skills/
 ```
+
+On Windows (PowerShell), the second line is `Copy-Item -Recurse paper-motion-video\skills\paper-motion-video $HOME\.claude\skills\`.
 
 **Other agents.** Any agent that supports Agent Skills can use `skills/paper-motion-video/`; it only needs a shell. Or point the agent at `SKILL.md` directly.
 
 The first run installs a private Python environment, the Kokoro voice model and font caches into `~/.cache/paper-motion-video`. This takes 3–6 minutes and happens once.
 
 **Requirements:**
-- macOS or Linux (on Windows, use WSL2)
-- bash and Python 3.10–3.12
+- macOS, Linux or Windows
+- Python 3.10–3.12, or [uv](https://docs.astral.sh/uv/) (which fetches one)
 - internet for the first run
 - Google Chrome recommended (otherwise Chromium is downloaded automatically)
 
@@ -61,9 +67,13 @@ Ask your agent, for example:
 
 > Create a short explainer video of arXiv 2406.01234 for our lab's LinkedIn page. British voice, please.
 
+> Make a 60-second vertical cut of my paper for Instagram Reels, without music.
+
+> From now on, make my paper videos 90 seconds long, portrait only.
+
 The agent then works through these steps:
 1. Reads the paper and writes a fact sheet with sources.
-2. Drafts a ~270-word script and a storyboard, which it shows you if you're around.
+2. Drafts a script sized to the length (about 250 words for 2 minutes) and a storyboard, which it shows you if you're around.
 3. Synthesizes the voice and designs scenes from the component library.
 4. Reviews stills of every scene with an automatic layout audit.
 5. Renders and packages the video, then does a final pass through the finished file: an automatic sweep of every quarter second plus a frame-by-frame visual check.
@@ -76,7 +86,7 @@ The CLI works on its own:
 
 ```bash
 SKILL=skills/paper-motion-video
-$SKILL/tools/pmv new ~/Desktop/my-video          # or: --example pit-llm
+$SKILL/tools/pmv new ~/Desktop/my-video --length 90   # setup flags below; or: --example pit-llm
 # edit config.json, script.txt, scenes.js
 $SKILL/tools/pmv narrate ~/Desktop/my-video      # voice + timeline + subtitles
 $SKILL/tools/pmv review ~/Desktop/my-video       # stills, contact sheets, layout audit
@@ -84,6 +94,16 @@ $SKILL/tools/pmv preview ~/Desktop/my-video      # open the printed URL to scrub
 $SKILL/tools/pmv all ~/Desktop/my-video --skip-narrate   # music, render, package, final check
 $SKILL/tools/pmv check ~/Desktop/my-video                # final pass on its own: file, layout sweep, contact sheets
 ```
+
+On Windows, run the same commands with `skills\paper-motion-video\tools\pmv.cmd` in cmd or PowerShell (Git Bash runs `tools/pmv` as above).
+
+**Setup options.** `pmv new` takes these flags and prints the word and scene budget for the chosen length:
+- `--length`: 90, 2m or 1:30
+- `--formats`: landscape, portrait, vertical, square, or a comma list
+- `--voice`: a Kokoro voice, such as `bf_emma`
+- `--music`: hopeful, reflective, driving or off
+
+`pmv defaults` with the same flags saves them as the starting point for every new project, in `~/.config/paper-motion-video/defaults.json`. Any other `config.json` field can go in that file too, such as your lab's colors. Run `pmv defaults` alone to see the current defaults, or add `--reset` to forget them.
 
 ## How it works
 
@@ -103,11 +123,12 @@ scenes.js + runtime/ (engine + 25 components) ──► headless Chrome, frame b
 
 ```
 .claude-plugin/              plugin + marketplace manifests
+hooks/  types/  tests/       the Claude Code progress pane (a hooks module), its state contract and its tests
 skills/paper-motion-video/
   SKILL.md                   the agent's instructions
   references/                storytelling, design rules, component API, troubleshooting
   runtime/                   engine.js, components.js, theme.css, page template
-  tools/                     pmv CLI: setup, narrate, review, music, video, final, figures
+  tools/                     pmv CLI (pmv for bash, pmv.cmd for Windows): new, defaults, narrate, review, music, video, final, check
   templates/project/         starter project
   examples/pit-llm/          complete 2-minute example (script + scenes)
 docs/                        README images

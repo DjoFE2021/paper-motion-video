@@ -1,22 +1,23 @@
 ---
 name: paper-motion-video
 description: >-
-  Turn an academic paper (LaTeX source, PDF, arXiv link, poster or slides) into a ~2-minute narrated
-  explainer video in a refined, editorial motion-design style, in a 16:9 cut and a phone-first 4:5 cut.
+  Turn an academic paper (LaTeX source, PDF, arXiv link, poster or slides) into a narrated explainer video
+  (about 2 minutes by default, any length the user asks for) in a refined, editorial motion-design style,
+  in a 16:9 cut and a phone-first 4:5 cut.
   Charts are rebuilt from the paper's real numbers, a neural voice-over comes with word-synced subtitles
   and a quiet synthesized score, and everything renders locally to MP4. Use this skill whenever someone
   wants a video, teaser, trailer, video abstract, explainer, conference or poster-session loop, or a
   social-media clip about a paper or research project, even if they only say "make a video of my paper",
   "animate our results" or "something for LinkedIn about our NeurIPS paper".
 license: MIT
-compatibility: macOS or Linux with bash and Python 3.10-3.12. Internet is needed for the first setup. Google Chrome is recommended (otherwise Chromium is downloaded).
+compatibility: macOS, Linux or Windows with Python 3.10-3.12 (or uv, which fetches one). Internet is needed for the first setup. Google Chrome is recommended (otherwise Chromium is downloaded).
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # Paper → explainer video
 
-You turn a paper into a ~2-minute video whose only job is to get the paper's message across as clearly as possible. The look is that of a well-designed journal figure or quality newspaper graphic coming to life: paper-white background, serif headlines, flat charts, calm motion synced to the voice. It is not a tech demo.
+You turn a paper into a short video (2 minutes unless the user asks for another length) whose only job is to get the paper's message across as clearly as possible. The look is that of a well-designed journal figure or quality newspaper graphic coming to life: paper-white background, serif headlines, flat charts, calm motion synced to the voice. It is not a tech demo.
 
 Most viewers will watch on a phone, so a project ships **two cuts of the same narration**: landscape 16:9 (YouTube, talks, desktop) and portrait 4:5 (LinkedIn, Instagram and X feeds). Vertical 9:16 and square are available too. The deliverables are:
 
@@ -30,11 +31,12 @@ The pipeline is built, so your work is the parts that need judgment: the story, 
 - **Visuals:** an HTML/JS motion engine with ~30 animated components (`runtime/`), sized from a per-format type scale so text stays readable on phones. Headless Chrome renders it in parallel.
 - **Sound:** a synthesized score plus soft sound cues that the components emit. The music ducks under the voice, and the mix is normalized to −16 LUFS.
 
-Paths are relative to this skill's folder (the directory containing this file). The CLI is `<skill-dir>/tools/pmv`, called `pmv` below. Its first call installs everything into `~/.cache/paper-motion-video` (3–6 min, one time). If anything looks off, run `pmv doctor`. Every command after `narrate` runs for each format in `config.json` → `video.formats`; add `--format portrait` (or `landscape`, a comma list, `all`) to pick.
+Paths are relative to this skill's folder (the directory containing this file). The CLI is `<skill-dir>/tools/pmv`, called `pmv` below; it runs in bash on macOS and Linux, and in Git Bash on Windows. From Windows cmd or PowerShell, call `<skill-dir>\tools\pmv.cmd` instead, including the `.cmd`. Its first call installs everything into `~/.cache/paper-motion-video` (3–6 min, one time). If anything looks off, run `pmv doctor`. Every command after `narrate` runs for each format in `config.json` → `video.formats`; add `--format portrait` (or `landscape`, a comma list, `all`) to pick. In Claude Code with this plugin installed, a "Video progress" pane follows these commands beside the chat (`/video-progress` opens it); it needs nothing from you.
 
 | Step | Command | Time for 2 min of video |
 |---|---|---|
-| Create a project | `pmv new <dir>` (add `--example pit-llm` for the worked example) | instant |
+| Create a project | `pmv new <dir> --length 90 --formats portrait --voice bf_emma --music off` (every flag optional; `--example pit-llm` for the worked example) | instant |
+| The setup new projects start from | `pmv defaults` (shows it), `pmv defaults --length 90 ...` (saves it), `--reset` | instant |
 | Paper text, searchable | `pmv text <paper.pdf>` | seconds |
 | Voice-over + timeline | `pmv narrate <dir>` | ~1 min, cached per sentence |
 | Review stills + contact sheets + layout audit | `pmv review <dir>` | ~10 s per format |
@@ -52,9 +54,11 @@ Paths are relative to this skill's folder (the directory containing this file). 
 Find the best source. SSRN, journal sites and some preprint servers block automated downloads (HTTP 403); if a fetch fails, ask the user to download the PDF in their browser and tell you where it is, rather than retrying. LaTeX beats PDF: tables, `pgfplots` coordinates and captions give exact numbers. Look for poster and slide sources next to the paper; they hold clean data and the authors' own framing of the story. For a PDF, run `pmv text paper.pdf` and search the text file it writes (page markers included) instead of reading the PDF page by page.
 
 Ask only what you cannot infer, in one message, then proceed:
-- **Where to save.** Never inside the paper's synced folder (Overleaf/Dropbox/the paper's repo). The default is `~/Desktop/<short-name>-video/`.
-- **Length, audience and formats**, if not "~2 minutes for smart non-specialists, landscape + portrait".
-- **Voice**, if they care (see `references/storytelling.md`).
+- **Where to save.** Never inside the paper's synced folder (Overleaf/Dropbox/the paper's repo). The default is `~/Desktop/<short-name>-video/`. On Windows the Desktop is often redirected (e.g. to OneDrive); `powershell -NoProfile -Command "[Environment]::GetFolderPath('Desktop')"` prints the real one.
+- **Length, audience and formats**, if not "the user's defaults for smart non-specialists". `pmv defaults` shows those defaults; out of the box they're 2 minutes, landscape + portrait. Typical lengths are 1:00 (Reels, Shorts), 1:30 and 2:00 (LinkedIn, YouTube), and up to 3:00 for a talk.
+- **Voice and music**, if they care (see `references/storytelling.md`).
+
+Pass the answers to `pmv new` as flags. When the user states a lasting preference ("always 90 seconds", "never music", "British voice"), also save it with `pmv defaults --length 90` (or `--formats`, `--voice`, `--music`) and say where it went. Every later project then starts from it.
 
 If the user is around, show them the narration and a one-line-per-scene storyboard before the final render, and offer changes. Don't block on it if they asked you to just go.
 
@@ -71,7 +75,7 @@ Create `<project>/facts.md` with every number, label and claim you plan to show 
 
 Read `references/storytelling.md`; it has the arc, the word budget, the spoken-form rules and what to do with theory papers that have no data. In short:
 
-- 2 minutes ≈ 235–250 words, 18–22 sentences at `voice.speed` 1.1 (about 230 for jargon-heavy or theory papers, which are spoken more slowly). If `pmv narrate` reports you are over, cut a sentence.
+- Write to the word budget `pmv new` printed for the project's length (`video.targetSeconds`). That's 2:00 ≈ 235–250 words in 18–22 sentences at `voice.speed` 1.1, 1:30 ≈ 170–185 and 1:00 ≈ 110–120. Use the low end for jargon-heavy or theory papers, which are spoken more slowly. If `pmv narrate` reports you are over, cut a sentence.
 - Write numbers, years and acronyms in spoken form with `{Shown|spoken}`, and break subtitles with ` / `.
 - Put a 3–4 s pause after the hook for the title card.
 - Plain, specific sentences in the authors' own vocabulary. Hype words make the video sound machine-made.
@@ -79,8 +83,8 @@ Read `references/storytelling.md`; it has the arc, the word budget, the spoken-f
 - Music: `music.preset` `hopeful` (default) suits results papers, `reflective` theory and conceptual papers, `driving` systems and benchmark papers.
 
 ```bash
-pmv new ~/Desktop/mypaper-video
-# edit config.json (title, authors, venue, links, theme colors, formats, music preset) and script.txt
+pmv new ~/Desktop/mypaper-video --length 2m      # prints the word and scene budget for that length
+# edit config.json (title, authors, venue, links, theme colors) and script.txt
 pmv narrate ~/Desktop/mypaper-video      # per-cue timings + total duration + how many words to cut/add
 ```
 
@@ -92,7 +96,7 @@ Before writing scenes, read:
 - `examples/pit-llm/scenes.js` and `examples/pit-llm/scenes.portrait.js`: the same 2-minute video in both formats
 
 Write `scenes.js` (landscape) first, then `scenes.portrait.js`: same scene ids and windows, same timing anchors, a new one-column layout. Then:
-- **One scene per story beat** (8–10 scenes). Each holds 1–3 ideas, and something changes every 2–3 s.
+- **One scene per story beat**, about one per 13 s (8–10 for 2:00; `pmv new` printed the count for the project's length). Each holds 1–3 ideas, and something changes every 2–3 s.
 - **Time everything from the narration.** Use `S('cue')`, `E('cue')` and `W('cue','word')`; never hard-code seconds. A bar grows when its number is spoken, and a label appears with its noun.
 - **Rebuild charts from the data** (`UI.hbars`, `UI.vbars`, `UI.lineChart`, `UI.table`) rather than pasting figures. Highlight the paper's method in `accent`, keep the rest `neutral`, and annotate the one difference the narration states with `UI.bracket`.
 - **Kinetic type for 3–5 key sentences only** (`UI.kinetic`): hook, question, main claim, closing line. Those cues automatically drop their subtitle.

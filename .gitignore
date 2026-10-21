@@ -1,0 +1,12 @@
+# macOS and Windows folder clutter
+.DS_Store
+._*
+Thumbs.db
+desktop.ini
+
+# Python
+__pycache__/
+*.pyc
+
+# Type declarations Claude Code writes beside the plugin when it loads it from this folder
+.claude-plugin/types/

@@ -12,7 +12,7 @@ import json
 import re
 import subprocess
 
-from common import FORMATS, Project, die, ffmpeg
+from common import FORMATS, RUN, Project, die, ffmpeg
 import finalize
 import render
 
@@ -33,6 +33,7 @@ def _cue_at(tl, t):
 
 def run(project: Project, interval=2.0, step=0.25, preview=False, fmt="landscape"):
     from PIL import Image, ImageDraw, ImageFont, ImageStat
+    RUN.step("check", fmt, preview=preview)
     tl = project.timeline()
     fb = project.fbuild(fmt)
     name = project.out_name(fmt) + ("_preview" if preview else "")
@@ -61,7 +62,7 @@ def run(project: Project, interval=2.0, step=0.25, preview=False, fmt="landscape
     if not srt.exists():
         problems.append("subtitle file missing in out/")
     else:
-        ends = re.findall(r"--> (\d+):(\d+):(\d+),(\d+)", srt.read_text())
+        ends = re.findall(r"--> (\d+):(\d+):(\d+),(\d+)", srt.read_text(encoding="utf-8"))
         if ends:
             h, m, s, ms = map(int, ends[-1])
             if h * 3600 + m * 60 + s + ms / 1000 > dur + 0.1:
@@ -127,7 +128,7 @@ def run(project: Project, interval=2.0, step=0.25, preview=False, fmt="landscape
         sheets.append(out)
     notes.append(f"{len(frames)} frames decoded from {main.name}, every {interval:g} s")
 
-    (fb / "check" / "report.json").write_text(json.dumps({"problems": problems, "notes": notes, "sheets": [str(s) for s in sheets]}, indent=1))
+    (fb / "check" / "report.json").write_text(json.dumps({"problems": problems, "notes": notes, "sheets": [str(s) for s in sheets]}, indent=1), encoding="utf-8")
     print(f"[{fmt}] final pass")
     for nt in notes:
         print(nt)

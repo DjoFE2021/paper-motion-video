@@ -277,7 +277,7 @@ class Score:
         nf = int(2.0 * SR)
         mix[-nf:] *= (np.linspace(1, 0, nf) ** 2)[:, None]
         sf.write(self.fb / "mix.wav", mix.astype(np.float32), SR, subtype="PCM_24")
-        (self.fb / "mix.json").write_text(json.dumps({"cues": cue_hash(self.p, self.ev)}))
+        (self.fb / "mix.json").write_text(json.dumps({"cues": cue_hash(self.p, self.ev)}), encoding="utf-8")
         print(f"mix: {meter.integrated_loudness(mix):.1f} LUFS, peak {20 * np.log10(np.abs(mix).max()):.1f} dBFS, "
               f"{len(self.ev.get('sfx', []))} sound cues, music {'on' if self.m.get('enabled', True) else 'off'}")
 
@@ -292,7 +292,7 @@ def stale(project, fmt, ev):
     f = project.fbuild(fmt) / "mix.json"
     if not (project.fbuild(fmt) / "mix.wav").exists() or not f.exists():
         return True
-    return json.loads(f.read_text()).get("cues") != cue_hash(project, ev)
+    return json.loads(f.read_text(encoding="utf-8")).get("cues") != cue_hash(project, ev)
 
 
 def run(project: Project, fmt="landscape"):

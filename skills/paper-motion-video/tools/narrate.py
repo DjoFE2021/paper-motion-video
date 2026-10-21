@@ -17,7 +17,7 @@ import re
 import numpy as np
 import soundfile as sf
 
-from common import Project, die
+from common import RUN, Project, die
 
 SR = 24000
 UNIT = re.compile(r"\{([^|}]*)\|([^}]*)\}|(?<!\S)(/)(?!\S)|(\S+)")
@@ -98,14 +98,15 @@ def run(project: Project):
     script = project.dir / "script.txt"
     if not script.exists():
         die("no script.txt in the project")
-    cues_in = parse_script(script.read_text())
+    cues_in = parse_script(script.read_text(encoding="utf-8"))
     cache = project.build / "tts_cache"
     cache.mkdir(exist_ok=True)
     pipe = None
 
     pieces, t = [np.zeros(int(v["leadIn"] * SR), np.float32)], float(v["leadIn"])
     cues, subs = {}, []
-    for c in cues_in:
+    RUN.step("narrate", total=len(cues_in), unit="sentences")
+    for i, c in enumerate(cues_in):
         if c["gap"]:
             pieces.append(np.zeros(int(c["gap"] * SR), np.float32))
             t += c["gap"]
@@ -150,6 +151,7 @@ def run(project: Project):
             seg.append((c["id"], w))
         subs.append(seg)
         t += len(clip) / SR
+        RUN.advance(i + 1)
 
     pieces.append(np.zeros(int(v["tail"] * SR), np.float32))
     voice_wav = np.concatenate(pieces)
@@ -164,13 +166,13 @@ def run(project: Project):
 
     sf.write(project.build / "voice.wav", voice_wav, SR)
     (project.build / "timeline.json").write_text(json.dumps(
-        {"duration": round(duration, 3), "voice": voice, "speed": speed, "cues": cues, "subs": subs}, indent=1))
+        {"duration": round(duration, 3), "voice": voice, "speed": speed, "cues": cues, "subs": subs}, indent=1), encoding="utf-8")
 
     def ts(x):
         hh, r = divmod(x, 3600)
         mm, ss = divmod(r, 60)
         return f"{int(hh):02d}:{int(mm):02d}:{int(ss):02d},{int(round((ss % 1) * 1000)) % 1000:03d}"
-    with open(project.build / "subtitles.srt", "w") as fh:
+    with open(project.build / "subtitles.srt", "w", encoding="utf-8") as fh:
         for i, s in enumerate(subs, 1):
             fh.write(f"{i}\n{ts(s['t0'])} --> {ts(s['t1'])}\n{s['text']}\n\n")
 

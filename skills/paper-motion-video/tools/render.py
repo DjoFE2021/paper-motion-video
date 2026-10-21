@@ -7,7 +7,7 @@ import os
 import subprocess
 import time
 
-from common import FORMATS, Project, die, ffmpeg, write_index
+from common import FORMATS, RUN, Project, die, ffmpeg, write_index
 
 AUDIT_JS = r"""
 () => {
@@ -210,7 +210,8 @@ async def _stills(project, times, sheet, audit, fmt):
             ev = await pg.evaluate("() => ({...window.EVENTS, scenes: window.SCENES_INFO()})")
             times = auto_times(tl, ev["scenes"]) + [round(ev[k] + d, 2) for k, d in (("title", 2.2), ("endcard", 2.6)) if ev.get(k) is not None]
             times = sorted(set(times))
-        for t in times:
+        RUN.step("review" if auto else "stills", fmt, total=len(times), unit="stills")
+        for k, t in enumerate(times):
             await pg.evaluate("([t, f]) => render(t, f)", [t, round(t * 30)])
             path = outdir / f"t{t:07.2f}.png"
             await pg.screenshot(path=str(path))
@@ -221,6 +222,7 @@ async def _stills(project, times, sheet, audit, fmt):
                 for msg in res["issues"]:
                     if not msg.startswith("ghost:"):
                         report.append(f"t={t:6.2f} [{cue_at(tl, t)}]  {msg}")
+            RUN.advance(k + 1)
         await b.close()
     print(f"[{fmt}] {len(paths)} stills in {outdir}")
     if sheet:
@@ -229,7 +231,7 @@ async def _stills(project, times, sheet, audit, fmt):
     if audit:
         report = list(dict.fromkeys(report))
         txt = "\n".join(report) if report else "no layout issues found"
-        (outdir / "audit.txt").write_text(txt + "\n")
+        (outdir / "audit.txt").write_text(txt + "\n", encoding="utf-8")
         print(f"\n[{fmt}] layout audit:\n" + ("\n".join("  " + r for r in report[:60]) if report else "  no issues found"))
         if len(report) > 60:
             print(f"  ... {len(report) - 60} more in {outdir / 'audit.txt'}")
@@ -245,7 +247,7 @@ async def _events(project, fmt):
         b, pg, _ = await open_page(p, project, fmt=fmt)
         ev = await pg.evaluate("() => ({...window.EVENTS, scenes: window.SCENES_INFO()})")
         await b.close()
-    (project.fbuild(fmt) / "events.json").write_text(json.dumps(ev, indent=1))
+    (project.fbuild(fmt) / "events.json").write_text(json.dumps(ev, indent=1), encoding="utf-8")
     return ev
 
 
@@ -253,7 +255,7 @@ def events(project, fmt="landscape"):
     return asyncio.run(_events(project, fmt))
 
 
-async def _worker(p, project, f0, f1, fps, path, tag, scale, preview, fmt, delay=0.0):
+async def _worker(p, project, f0, f1, fps, path, tag, scale, preview, fmt, tick, delay=0.0):
     await asyncio.sleep(delay)  # stagger browser start-up
     b, pg, _ = await open_page(p, project, scale, fmt)
     enc = (["-c:v", "libx264", "-preset", "veryfast", "-crf", "23"] if preview else
@@ -267,6 +269,7 @@ async def _worker(p, project, f0, f1, fps, path, tag, scale, preview, fmt, delay
         for f in range(f0, f1):
             await pg.evaluate("([t, f]) => render(t, f)", [f / fps, f])
             proc.stdin.write(await pg.screenshot(type="jpeg", quality=95 if not preview else 88))
+            tick()
             if (f - f0) % 600 == 0 and f > f0:
                 done = (f - f0) / (f1 - f0)
                 print(f"[{tag}] {100 * done:4.0f}%  eta {(time.time() - t0) / done * (1 - done) / 60:.1f} min", flush=True)
@@ -285,7 +288,13 @@ async def _video(project, fps, workers, start, end, preview, fmt):
     end = tl["duration"] if end is None else min(end, tl["duration"])
     n0, n1 = int(round(start * fps)), int(math.ceil(end * fps))
     step = math.ceil((n1 - n0) / workers)
-    segs, jobs = [], []
+    segs, jobs, done = [], [], [0]
+    RUN.step("render", fmt, total=n1 - n0, unit="frames", preview=preview)
+
+    def tick():   # one frame written, by any worker
+        done[0] += 1
+        RUN.advance(done[0])
+
     async with async_playwright() as p:
         for k in range(workers):
             a, z = n0 + k * step, min(n1, n0 + (k + 1) * step)
@@ -293,10 +302,10 @@ async def _video(project, fps, workers, start, end, preview, fmt):
                 break
             path = fb / f"seg{k:02d}.mp4"
             segs.append(path)
-            jobs.append(_worker(p, project, a, z, fps, path, f"{fmt}:w{k}", .5 if preview else 1.0, preview, fmt, delay=.6 * k))
+            jobs.append(_worker(p, project, a, z, fps, path, f"{fmt}:w{k}", .5 if preview else 1.0, preview, fmt, tick, delay=.6 * k))
         await asyncio.gather(*jobs)
     lst = fb / "segs.txt"
-    lst.write_text("".join(f"file '{s}'\n" for s in segs))
+    lst.write_text("".join(f"file '{s}'\n" for s in segs), encoding="utf-8")
     out = fb / ("preview.mp4" if preview else "video.mp4")
     subprocess.run([ffmpeg(), "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(lst), "-c", "copy", str(out)], check=True)
     for s in segs:

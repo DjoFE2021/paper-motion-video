@@ -1,11 +1,49 @@
 #!/usr/bin/env bash
-# paper-motion-video command line. Usage: tools/pmv <command> [args]   (tools/pmv help)
-# The first call runs setup.sh automatically.
+# paper-motion-video command line for macOS, Linux and Git Bash on Windows (pmv.cmd does the same for cmd and PowerShell).
+# Usage: tools/pmv <command> [args]   (tools/pmv help). The first call sets up the environment (a venv, then install.py).
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export PMV_HOME="${PMV_HOME:-$HOME/.cache/paper-motion-video}"
-if [ "${1:-}" = "setup" ]; then rm -f "$PMV_HOME/.ready"; exec bash "$HERE/setup.sh"; fi
-if [ ! -f "$PMV_HOME/.ready" ]; then bash "$HERE/setup.sh" || exit 1; fi
 export HF_HOME="$PMV_HOME/hf"
 export PYTHONNOUSERSITE=1
 export PYTHONWARNINGS=ignore
-exec "$PMV_HOME/venv/bin/python" "$HERE/pmv.py" "$@"
+export PYTHONUTF8=1   # UTF-8 files and console output on Windows too
+VENV="$PMV_HOME/venv"
+log() { printf '\033[1;34m[pmv setup]\033[0m %s\n' "$*" >&2; }
+venv_python() { if [ -f "$VENV/Scripts/python.exe" ]; then echo "$VENV/Scripts/python.exe"; else echo "$VENV/bin/python"; fi; }
+
+# A Python 3.10-3.12 (the Kokoro voice model does not support 3.13 yet); py is the Windows launcher
+pick_python() {
+  for c in python3.12 python3.11 python3.10 "py -3.12" "py -3.11" "py -3.10" python3 python; do
+    if command -v "${c%% *}" >/dev/null 2>&1 &&
+       $c -c 'import sys; sys.exit(sys.version_info[:2] not in ((3, 10), (3, 11), (3, 12)))' </dev/null >/dev/null 2>&1; then
+      echo "$c"; return 0
+    fi
+  done
+  return 1
+}
+
+make_venv() {
+  rm -rf "$VENV"
+  if PY=$(pick_python); then
+    log "creating venv with $PY"
+    $PY -m venv "$VENV" && return
+    rm -rf "$VENV"   # e.g. Debian/Ubuntu without python3-venv: try uv
+  fi
+  if command -v uv >/dev/null 2>&1; then
+    log "creating venv with uv (Python 3.12)"
+    uv venv --seed --python 3.12 "$VENV" && return
+  fi
+  echo "paper-motion-video needs Python 3.10-3.12 (the Kokoro voice model does not support 3.13 yet)." >&2
+  echo "Install one, e.g. 'brew install python@3.12', 'winget install Python.Python.3.12' or 'uv python install 3.12', then re-run." >&2
+  return 1
+}
+
+setup() {
+  mkdir -p "$PMV_HOME"
+  [ -x "$(venv_python)" ] || make_venv || return 1
+  "$(venv_python)" "$HERE/install.py"
+}
+
+if [ "${1:-}" = "setup" ]; then rm -f "$PMV_HOME/.ready"; setup; exit; fi
+if [ ! -f "$PMV_HOME/.ready" ]; then setup || exit 1; fi
+exec "$(venv_python)" "$HERE/pmv.py" "$@"

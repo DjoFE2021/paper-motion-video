@@ -1,0 +1,12 @@
+{
+  "name": "paper-motion-video",
+  "owner": { "name": "Johannes Schwab" },
+  "metadata": { "description": "Narrated explainer videos of research papers, made by your coding agent" },
+  "plugins": [
+    {
+      "name": "paper-motion-video",
+      "source": "./",
+      "description": "Turn a research paper into a narrated explainer video, with a pane that follows the agent through the pipeline"
+    }
+  ]
+}

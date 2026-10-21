@@ -2,11 +2,17 @@
 
 ## Setup
 - **`pmv doctor` first.** It checks the Python packages, ffmpeg, the browser, the voice model and network access.
-- **Python.** Kokoro needs Python 3.10–3.12. `setup.sh` picks `python3.12`/`3.11`/`3.10`/`python3`, else uses `uv` if it is installed. Otherwise install one (`brew install python@3.12`, `uv python install 3.12`) and run `pmv setup`.
+- **Python.** Kokoro needs Python 3.10–3.12. The first `pmv` call picks `python3.12`/`3.11`/`3.10`, `py -3.12`/`-3.11`/`-3.10` (the Windows launcher), `python3` or `python`, else uses `uv` if it is installed (also when creating the venv fails, as on Debian/Ubuntu without `python3-venv`). Otherwise install one (`brew install python@3.12`, `winget install Python.Python.3.12`, `uv python install 3.12`) and run `pmv setup`.
 - **Intel Macs (x86_64).** PyTorch stopped shipping wheels after 2.2.2, so setup pins `torch==2.2.2`, `numpy<2`, `transformers<4.46` and `scipy<1.14` through a constraints file. If you install extra packages into the venv by hand, pass `-c ~/.cache/paper-motion-video/constraints.txt`; otherwise numpy 2 sneaks in and torch fails with "Numpy is not available".
 - **Linux.** Setup installs CPU-only torch. If Chromium won't start: `sudo ~/.cache/paper-motion-video/venv/bin/python -m playwright install-deps chromium`.
-- **Windows.** Use WSL2 (Ubuntu); the tools are bash + Python.
-- **Start over.** `rm -rf ~/.cache/paper-motion-video` and run any `pmv` command. Set `PMV_HOME` to install elsewhere.
+- **Windows.** Use `tools\pmv.cmd` in cmd or PowerShell, and `tools/pmv` in Git Bash; both share one environment in `%USERPROFILE%\.cache\paper-motion-video`. WSL2 works too, as Linux. If pip fails with a path-too-long error, enable long paths in Windows or set `PMV_HOME` to a short folder such as `C:\pmv`.
+- **Setup options.** `pmv new` reads `~/.config/paper-motion-video/defaults.json` (or the file `PMV_DEFAULTS` names), which `pmv defaults` writes, and then applies its flags on top. `pmv defaults` prints what a new project would get; `pmv defaults --reset` forgets it. A worked example (`--example`) keeps its own setup unless a flag changes it.
+- **Start over.** Delete `~/.cache/paper-motion-video` (`rm -rf` on macOS and Linux, `Remove-Item -Recurse -Force` in PowerShell) and run any `pmv` command. Set `PMV_HOME` to install elsewhere.
+
+## Progress pane (Claude Code plugin)
+- **It stays empty.** It follows the `pmv` runs this session started: the plugin sets `PMV_PROGRESS_DIR` for the session, and each run writes a small record there. A run in another terminal or session doesn't show. Nothing is written where the variable is unset, so other agents are unaffected.
+- **It doesn't open.** Unasked, it opens only in a wide terminal. `/video-progress` opens it at any width, and the one-line status under the prompt shows the same progress meanwhile.
+- **A step looks stuck.** A record that hasn't changed for two minutes counts as a stopped run (killed, or the machine slept). Run the command again.
 
 ## Narration
 - **A word is mispronounced.** Respell it in the spoken half: `{LoRA|lora}`, `{ChronoGPT|Chrono G P T}`, `{SQL|sequel}`. Re-run `pmv narrate`; unchanged sentences come from `build/tts_cache/`.
@@ -19,7 +25,7 @@
 - **An element never appears.** Check its `at`: it must lie inside the scene's window `[a, b]`. Also check for opacity set by a parent layer and for JavaScript errors in the review output.
 - **Something shows through a hidden group.** You used `visibility:hidden` on a parent. Use `opacity` and `display` instead.
 - **Frames differ between runs or flicker.** Something depends on state, `Math.random`, `Date` or CSS animations. Make it a pure function of `t` (use `rng(seed)`).
-- **Text falls back to Georgia/Helvetica.** The font cache failed to download (offline at first use). Delete `~/.cache/paper-motion-video/assets` and run `pmv review` online once. `build/index.html` (the browser preview) loads fonts from the web.
+- **Text falls back to Georgia or a system font.** The font cache failed to download (offline at first use). Delete `~/.cache/paper-motion-video/assets` and run `pmv review` online once. `build/index.html` (the browser preview) loads fonts from the web.
 - **"text too small for phones".** The text is below `TYPE.min` on screen (20 px landscape, 24 px portrait). Use a `TYPE` size, shorten the text so a bigger size fits, or split the content across two pages. Text inside a container scaled with `UI.move` counts at its scaled size.
 - **"texts touch".** Two labels on the same line are less than 8 px apart (e.g. a value and an annotation). Move one, or put the annotation on its own line.
 - **"text sits on a card / bar it does not belong to".** A label overlaps a card or a bar that isn't its parent. Move it into free space, or into the card it describes.
