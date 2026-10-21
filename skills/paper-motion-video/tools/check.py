@@ -12,7 +12,7 @@ import json
 import re
 import subprocess
 
-from common import FORMATS, RUN, Project, die, ffmpeg
+from common import FORMATS, RUN, Project, die, ffmpeg, frame_size
 import finalize
 import render
 
@@ -47,7 +47,7 @@ def run(project: Project, interval=2.0, step=0.25, preview=False, fmt="landscape
     lufs, peak = finalize.loudness(main)
     dur = info["duration"] or 0
     W, H = FORMATS[fmt]
-    want = f"{W // 2}x{H // 2}" if preview else f"{W}x{H}"
+    want = "{}x{}".format(*frame_size(fmt, preview))
     if info["size"] != want:
         problems.append(f"resolution is {info['size']}, expected {want}")
     if abs(dur - tl["duration"]) > 0.25:

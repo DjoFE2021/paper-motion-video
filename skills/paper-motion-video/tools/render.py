@@ -7,7 +7,7 @@ import os
 import subprocess
 import time
 
-from common import FORMATS, RUN, Project, die, ffmpeg, write_index
+from common import FORMATS, RUN, Project, die, ffmpeg, frame_size, write_index
 
 AUDIT_JS = r"""
 () => {
@@ -261,7 +261,7 @@ async def _worker(p, project, f0, f1, fps, path, tag, scale, preview, fmt, tick,
     enc = (["-c:v", "libx264", "-preset", "veryfast", "-crf", "23"] if preview else
            ["-c:v", "libx264", "-preset", "medium", "-crf", "18", "-maxrate", "25M", "-bufsize", "50M", "-x264-params", "aq-mode=3"])
     cmd = [ffmpeg(), "-y", "-loglevel", "error", "-f", "image2pipe", "-c:v", "mjpeg", "-framerate", str(fps), "-i", "-",
-           "-vf", "scale=out_color_matrix=bt709:out_range=tv,format=yuv420p", *enc,
+           "-vf", "crop=trunc(iw/2)*2:trunc(ih/2)*2,scale=out_color_matrix=bt709:out_range=tv,format=yuv420p", *enc,  # even size, see frame_size
            "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-r", str(fps), str(path)]
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     t0 = time.time()
@@ -322,8 +322,7 @@ def video(project, fps=None, workers=None, start=0.0, end=None, preview=False, f
     t = time.time()
     tl = project.timeline()
     frames = int(((end or tl["duration"]) - start) * fps)
-    w, h = FORMATS[fmt]
-    size = f"{w // 2}x{h // 2}" if preview else f"{w}x{h}"
+    size = "{}x{}".format(*frame_size(fmt, preview))
     print(f"[{fmt}] rendering {frames} frames at {fps} fps, {size}{' (preview)' if preview else ''}, {workers} workers ...", flush=True)
     try:
         out = asyncio.run(_video(project, fps, workers, start, end, preview, fmt))

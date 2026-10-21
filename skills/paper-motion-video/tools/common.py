@@ -17,6 +17,12 @@ PMV_HOME = Path(os.environ.get("PMV_HOME", Path.home() / ".cache" / "paper-motio
 # vertical = 9:16 (Reels, Shorts, TikTok, Stories); square = 1:1. Each non-landscape format needs its own scenes.<format>.js.
 FORMATS = {"landscape": (1920, 1080), "portrait": (1080, 1350), "vertical": (1080, 1920), "square": (1080, 1080)}
 
+
+def frame_size(fmt, preview=False):
+    """Pixel size of a rendered video: previews are half size, rounded down to even numbers for H.264 (portrait: 540x674)."""
+    w, h = FORMATS[fmt]
+    return (w // 4 * 2, h // 4 * 2) if preview else (w, h)
+
 DEFAULTS = {
     "voice": {"name": "af_heart", "speed": 1.1, "leadIn": 1.0, "tail": 5.0},
     "video": {"fps": 60, "phoneFps": 30, "targetSeconds": 120, "formats": ["landscape"]},
