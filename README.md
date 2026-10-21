@@ -2,7 +2,10 @@
 
 **Turn a research paper into a two-minute explainer video with your coding agent.**
 
-<!-- Demo video: on github.com, edit this file, click the empty line below, drag an .mp4 into the editor (10 MB at most on a free plan) and commit. GitHub uploads it and writes its link there, and that link plays inline. -->
+<p align="center">
+  <a href="docs/demo.mp4"><img src="docs/demo.gif" width="100%" alt="A 23-second loop from the example video: the title card, the lookahead-bias timeline, a line chart that draws itself, and the Sharpe-ratio bars"></a>
+</p>
+<p align="center"><sub>From the worked example, a two-minute video of <i>Scaling Point-in-Time Language Models</i> (NeurIPS 2026). <a href="docs/demo.mp4">Watch a 50-second extract with sound</a> (MP4, 4 MB).</sub></p>
 
 `paper-motion-video` is an [Agent Skill](https://agentskills.io) for Claude Code and other agents that read `SKILL.md`. Point it at a paper (LaTeX source, PDF, poster or slides) and it produces a narrated video (two minutes by default, or the length you ask for) in a calm, editorial style, in two cuts: 16:9 for YouTube and talks, and 4:5 for phones (LinkedIn, Instagram, X).
 
@@ -112,7 +115,7 @@ On Windows, run the same commands with `skills\paper-motion-video\tools\pmv.cmd`
 ```
 script.txt ──► Kokoro TTS ──► voice.wav + word timestamps (timeline.json)
                                        │
-scenes.js + runtime/ (engine + 25 components) ──► headless Chrome, frame by frame, in parallel ──► video.mp4
+scenes.js + runtime/ (engine + 34 components) ──► headless Chrome, frame by frame, in parallel ──► video.mp4
                                        │
                        sound cues from the components ──► synthesized score + mix ──► out/*.mp4
 ```
@@ -133,7 +136,7 @@ skills/paper-motion-video/
   tools/                     pmv CLI (pmv for bash, pmv.cmd for Windows): new, defaults, narrate, review, music, video, final, check
   templates/project/         starter project
   examples/pit-llm/          complete 2-minute example (script + scenes)
-docs/                        README images
+docs/                        README images, the demo loop and extract, the social-preview card
 ```
 
 ## Limitations
