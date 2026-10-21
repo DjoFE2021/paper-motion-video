@@ -2,7 +2,9 @@
 
 **Turn a research paper into a two-minute explainer video with your coding agent.**
 
-`paper-motion-video` is an [Agent Skill](https://agentskills.io) for Claude Code and other agents that read `SKILL.md`. Point it at a paper (LaTeX source, PDF, poster or slides) and it produces a narrated video in a calm, editorial style, in two cuts: 16:9 for YouTube and talks, and 4:5 for phones (LinkedIn, Instagram, X).
+<!-- Demo video: on github.com, edit this file, click the empty line below, drag an .mp4 into the editor (10 MB at most on a free plan) and commit. GitHub uploads it and writes its link there, and that link plays inline. -->
+
+`paper-motion-video` is an [Agent Skill](https://agentskills.io) for Claude Code and other agents that read `SKILL.md`. Point it at a paper (LaTeX source, PDF, poster or slides) and it produces a narrated video (two minutes by default, or the length you ask for) in a calm, editorial style, in two cuts: 16:9 for YouTube and talks, and 4:5 for phones (LinkedIn, Instagram, X).
 
 - **Charts come from the paper.** They are rebuilt from the paper's own numbers and draw themselves as the voice mentions them.
 - **Voice and subtitles are synced.** A neural voice-over comes with word-synced subtitles.

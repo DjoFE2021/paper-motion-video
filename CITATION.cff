@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use paper-motion-video, please cite it as below."
+title: "paper-motion-video: turn a research paper into a narrated explainer video with your coding agent"
+type: software
+authors:
+  - given-names: Johannes
+    family-names: Schwab
+license: MIT
+repository-code: "https://github.com/DjoFE2021/paper-motion-video"
+version: 1.2.0
+date-released: 2026-10-21
+keywords:
+  - science communication
+  - research video
+  - explainer video
+  - agent skills
+  - claude code
