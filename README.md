@@ -3,9 +3,9 @@
 **Turn a research paper into a two-minute explainer video with your coding agent.**
 
 <p align="center">
-  <a href="docs/demo.mp4"><img src="docs/demo.gif" width="100%" alt="A 23-second loop from the example video: the title card, the lookahead-bias timeline, a line chart that draws itself, and the Sharpe-ratio bars"></a>
+  <a href="https://cdn.jsdelivr.net/gh/DjoFE2021/paper-motion-video@main/docs/demo.mp4"><img src="docs/demo.gif" width="100%" alt="A 23-second loop from the example video: the title card, the lookahead-bias timeline, a line chart that draws itself, and the Sharpe-ratio bars"></a>
 </p>
-<p align="center"><sub>From the worked example, a two-minute video of <i>Scaling Point-in-Time Language Models</i> (NeurIPS 2026). <a href="docs/demo.mp4">Watch a 50-second extract with sound</a> (MP4, 4 MB).</sub></p>
+<p align="center"><sub>From the worked example, a two-minute video of <i>Scaling Point-in-Time Language Models</i> (NeurIPS 2026). <a href="https://cdn.jsdelivr.net/gh/DjoFE2021/paper-motion-video@main/docs/demo.mp4">Watch a 50-second extract with sound</a> (MP4, 4 MB).</sub></p>
 
 `paper-motion-video` is an [Agent Skill](https://agentskills.io) for Claude Code and other agents that read `SKILL.md`. Point it at a paper (LaTeX source, PDF, poster or slides) and it produces a narrated video (two minutes by default, or the length you ask for) in a calm, editorial style, in two cuts: 16:9 for YouTube and talks, and 4:5 for phones (LinkedIn, Instagram, X).
 
