@@ -12,7 +12,7 @@ description: >-
 license: MIT
 compatibility: macOS, Linux or Windows with Python 3.10-3.12 (or uv, which fetches one). Internet is needed for the first setup. Google Chrome is recommended (otherwise Chromium is downloaded).
 metadata:
-  version: "1.2.0"
+  version: "1.2.1"
 ---
 
 # Paper → explainer video
