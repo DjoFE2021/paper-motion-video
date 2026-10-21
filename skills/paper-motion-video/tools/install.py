@@ -1,4 +1,4 @@
-"""One-time environment setup (idempotent, ~3-6 min the first time), run by the pmv launchers with the venv's Python.
+"""One-time environment setup (idempotent, ~5-10 min the first time), run by the pmv launchers with the venv's Python.
 Installs the Python packages, a headless browser and the Kokoro voice model under PMV_HOME (default ~/.cache/paper-motion-video)."""
 import os
 import platform
@@ -56,6 +56,14 @@ def main():
         subprocess.run([PY, "-m", "playwright", "install", "chromium"], check=True)
         if system == "Linux":
             log(f"if Chromium fails to start, run: sudo {PY} -m playwright install-deps chromium")
+
+    # espeak-ng, which the voice uses for words outside its dictionary, cuts its data path at 159 characters (229 on Windows)
+    data = subprocess.run([PY, "-c", "import espeakng_loader; print(espeakng_loader.get_data_path())"],
+                          capture_output=True, text=True).stdout.strip()
+    limit = 229 if os.name == "nt" else 159
+    if len(data) > limit:
+        sys.exit(f"pmv setup: the voice's espeak-ng data path is {len(data)} characters long, and espeak-ng reads at most {limit}:\n"
+                 f"  {data}\nSet PMV_HOME to a shorter folder (the default is ~/.cache/paper-motion-video) and run pmv setup again.")
 
     # Warm up the voice model (downloads ~330 MB of Kokoro weights and the spaCy English model once)
     log("downloading the Kokoro voice model")

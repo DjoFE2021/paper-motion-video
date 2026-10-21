@@ -56,7 +56,7 @@ On Windows (PowerShell), the second line is `Copy-Item -Recurse paper-motion-vid
 
 **Other agents.** Any agent that supports Agent Skills can use `skills/paper-motion-video/`; it only needs a shell. Or point the agent at `SKILL.md` directly.
 
-The first run installs a private Python environment, the Kokoro voice model and font caches into `~/.cache/paper-motion-video`. This takes 3–6 minutes and happens once.
+The first run installs a private Python environment, the Kokoro voice model and font caches into `~/.cache/paper-motion-video`. This takes 5–10 minutes, depending on your connection, and happens once.
 
 **Requirements:**
 - macOS, Linux or Windows
